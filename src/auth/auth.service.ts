@@ -70,29 +70,33 @@ export class AuthService {
   /* ---------- helpers ---------- */
 
   private async issueTokenPair(userId: string, email: string) {
-    const accessTtl = +this.cfg.get('ACCESS_TTL') || 900;
-    const refreshTtl = +this.cfg.get('REFRESH_TTL') || 1209600;
+    const accessTtl  = +this.cfg.get('ACCESS_TTL')  || 900;      // в секундах
+    const refreshTtl = +this.cfg.get('REFRESH_TTL') || 1209600;  // в секундах
 
-    /* 1) refresh‑id нужен для безопасного отзыва */
+    // 1) Генерируем уникальный ID для refresh (JTI)
     const refreshId = crypto.randomUUID();
 
-    /* 2) сами JWT */
+    // 2) Формируем JWT
     const accessToken = this.jwt.sign(
       { sub: userId, email },
-      { secret: this.cfg.get('JWT_SECRET'), expiresIn: accessTtl },
+      { secret: this.cfg.get<string>('JWT_SECRET')!, expiresIn: accessTtl },
     );
-
     const refreshToken = this.jwt.sign(
       { sub: userId, email, jti: refreshId },
-      { secret: this.cfg.get('JWT_REFRESH_SECRET'), expiresIn: refreshTtl },
+      { secret: this.cfg.get<string>('JWT_REFRESH_SECRET')!, expiresIn: refreshTtl },
     );
 
-    /* 3) сохраняем refresh в БД */
+    // 3) Удаляем все старые записи для этого пользователя
+    await this.prisma.refreshToken.deleteMany({
+      where: { userId },
+    });
+
+    // 4) Сохраняем новый refresh-токен
     await this.prisma.refreshToken.create({
       data: {
-        id: refreshId,
-        token: refreshToken,
-        userId,
+        id:        refreshId,
+        token:     refreshToken,
+        userId:    userId,
         expiresAt: addSeconds(new Date(), refreshTtl),
       },
     });

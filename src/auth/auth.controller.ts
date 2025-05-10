@@ -8,7 +8,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -44,22 +44,30 @@ export class AuthController {
   }
 
   @Post('refresh')
+  @ApiOperation({ summary: 'Обновление access + refresh токенов' })
+  @ApiBody({ type: RefreshDto })
   @HttpCode(200)
   async refresh(
-    @Req() req: Request, 
+    @Body('refreshToken') bodyToken: string,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const cookie = req.cookies['refreshToken'];
-    if (!cookie) throw new UnauthorizedException('Refresh token not found');
-    const { accessToken, refreshToken, expiresIn } =
-      await this.auth.refresh(cookie);
+
+    const token = bodyToken ?? req.cookies['refreshToken'];
+    if (!token) {
+      throw new UnauthorizedException('Refresh token not provided');
+    }
+
+    const { accessToken, refreshToken, expiresIn } = await this.auth.refresh(token);
+
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       path: '/auth/refresh',
-      maxAge: expiresIn * 1000 * 7,
+      maxAge: expiresIn * 1000 * 7,  
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
     });
+
     return { accessToken, expiresIn };
   }
 
