@@ -1,0 +1,51 @@
+generator client {
+    provider        = "prisma-client-js"
+    previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+    provider   = "postgresql"
+    url        = env("DATABASE_URL")
+    extensions = [pgcrypto]
+}
+
+enum UserRole {
+    ADMIN
+    TEACHER
+    STUDENT
+}
+
+model User {
+    id           String   @id @default(uuid())
+    email        String   @unique
+    passwordHash String
+    fullName     String
+    role         UserRole @default(STUDENT)
+    createdAt    DateTime @default(now())
+
+    lessons Lesson[]
+}
+
+model Lesson {
+    id          String   @id @default(uuid())
+    title       String
+    description String?
+    pdfUrl      String
+    isPublic    Boolean  @default(false)
+    createdAt   DateTime @default(now())
+
+    ownerId String?
+    owner   User?   @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
+    publicLink PublicLink?
+}
+
+model PublicLink {
+    id        String    @id @default(uuid())
+    uuid      String    @unique
+    expiresAt DateTime?
+    createdAt DateTime  @default(now())
+
+    lessonId String @unique
+    lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+}
