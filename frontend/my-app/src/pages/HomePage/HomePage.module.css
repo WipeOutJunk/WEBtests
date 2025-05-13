@@ -1,0 +1,226 @@
+.layout {
+  position: relative;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(circle at top left, #0f0f1f 0%, #090909 100%);
+  color: #fff;
+  /* Добавляем выравнивание контента */
+  justify-content: space-between;
+}
+
+.glowEffect {
+  position: absolute;
+  top: -50%;
+  left: 50%;
+  width: 100vmax; /* Используем viewport units */
+  height: 100vmax;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  overflow: hidden;
+  background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 60%);
+  animation: rotateGlow 20s linear infinite;
+}
+
+@keyframes rotateGlow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.hero {
+  flex: 1 1 auto; /* Занимаем всё доступное пространство */
+  max-width: 1400px;
+  margin: 0 auto; /* Убираем верхний/нижний margin */
+  padding: 2rem clamp(1rem, 5vw, 2rem);
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.headerContent {
+  text-align: center;
+  margin-bottom: 0rem;
+  position: relative;
+}
+
+.title {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+  position: relative;
+  background: linear-gradient(45deg, #fff 65%, #6366f1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+
+.animatedUnderline {
+  width: 120px;
+  height: 4px;
+  background: #6366f1;
+  margin: 1rem auto;
+  border-radius: 2px;
+  animation: underlinePulse 2s ease-in-out infinite;
+}
+
+@keyframes underlinePulse {
+  0%, 100% { transform: scaleX(1); opacity: 1; }
+  50% { transform: scaleX(1.2); opacity: 0.7; }
+}
+
+.subtitle {
+  font-size: 1.4rem;
+  max-width: 800px;
+  margin: 0 auto 3rem;
+  line-height: 1.6;
+  opacity: 0.9;
+  position: relative;
+}
+
+.blinkingCursor {
+  animation: blink 1s step-end infinite;
+  margin-left: 4px;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+.grid {
+  margin-top: 3rem; /* Добавляем отступ сверху */
+  padding-bottom: 2rem; /* Отступ снизу для скролла */
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  padding: 2rem;
+}
+
+.card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  padding: 2rem;
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  overflow: hidden;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.15);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.cardIcon {
+  font-size: 2.5rem;
+  filter: drop-shadow(0 4px 6px rgba(99, 102, 241, 0.3));
+}
+
+.cardNumber {
+  font-size: 1.2rem;
+  color: rgba(99, 102, 241, 0.8);
+  font-weight: 700;
+}
+
+.cardTitle {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #fff;
+}
+
+.cardText {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  opacity: 0.85;
+}
+
+.cardHoverEffect {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(300px circle at var(--x) var(--y), 
+    rgba(99, 102, 241, 0.15), transparent);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.card:hover .cardHoverEffect {
+  opacity: 1;
+}
+
+/* Основной стиль для кнопки прокрутки */
+.scrollTop {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 40px;
+  height: 40px;
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  opacity: 0;
+  visibility: hidden;
+  z-index: 1000;
+  font-size: 1.5rem;
+  color: #6366f1;
+  border: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Когда кнопка становится видимой */
+.scrollTop.visible {
+  opacity: 1;
+  visibility: visible;
+  background: rgba(99, 102, 241, 0.2); /* Изменение фона при видимости */
+  transform: translateY(0);
+}
+
+/* Эффект при наведении */
+.scrollTop:hover {
+  background: rgba(99, 102, 241, 0.3);
+  transform: translateY(-3px); /* Легкий подъем */
+}
+
+/* Анимация при появлении кнопки */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    visibility: hidden;
+  }
+  100% {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+  
+  .title {
+    font-size: 2.8rem;
+  }
+  
+  .subtitle {
+    font-size: 1.2rem;
+  }
+}

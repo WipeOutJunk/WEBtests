@@ -1,13 +1,31 @@
-body {
+/* src/index.css */
+/* Сброс базовых стилей для всех элементов */
+*{
   margin: 0;
-  font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
-    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  padding: 0;
+
 }
 
-code {
-  font-family:
-    source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+/* Глобальные настройки прокрутки и высоты */
+html {
+  scroll-behavior: smooth;  /* Плавная прокрутка для всего документа */
+  overflow-y: overlay; /* Скроллбар поверх контента */
+
+}
+
+body,
+#root {
+  min-height: 100vh;        /* Минимальная высота на весь экран */
+  width: 100%;      
+  overflow-x: hidden;
+  position: relative;    
+      /* Полная ширина контейнера */
+}
+
+/* Фикс для некоторых мобильных браузеров */
+@supports (-webkit-touch-callout: none) {
+  body,
+  #root {
+    min-height: -webkit-fill-available; /* Для корректной высоты в iOS */
+  }
 }

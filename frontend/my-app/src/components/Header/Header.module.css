@@ -1,0 +1,129 @@
+.bar {
+  backdrop-filter: blur(25px) saturate(200%);
+  background: linear-gradient(
+      135deg,
+      rgba(15, 15, 31, 0.95) 0%,
+      rgba(9, 9, 9, 0.9) 100%
+  );
+  padding: 1.2rem 5%;
+  position: sticky;
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1000;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  border-image: linear-gradient(
+      to right,
+      transparent 0%,
+      rgba(99, 102, 241, 0.15) 50%,
+      transparent 100%
+  ) 1;
+}
+
+.logo {
+  font-size: 2rem;
+  font-weight: 800;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  letter-spacing: -0.5px;
+  position: relative;
+  overflow: hidden;
+  padding: 0.25rem;
+}
+
+.logoGradient {
+  background: linear-gradient(45deg, #6366f1 25%, #a855f7 75%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  position: relative;
+  padding-right: 0.5rem;
+  transition: all 0.3s ease;
+  text-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
+}
+
+.nav {
+  display: flex;
+  gap: 3rem;
+  align-items: center;
+}
+
+.link {
+  color: rgba(255, 255, 255, 0.92);
+  text-decoration: none;
+  font-weight: 600;
+  position: relative;
+  padding: 0.5rem 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.link:hover {
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.linkUnderline {
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%);
+  margin-top: 4px;
+  transition: width 0.3s ease, opacity 0.2s ease;
+  opacity: 0;
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.3);
+}
+
+.link:hover .linkUnderline {
+  width: 100%;
+  opacity: 1;
+}
+
+.bar.scrolled {
+  background: linear-gradient(
+      135deg,
+      rgba(15, 15, 31, 0.98) 0%,
+      rgba(9, 9, 9, 0.95) 100%
+  );
+  padding: 0.8rem 5%;
+  backdrop-filter: blur(35px) saturate(250%);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.headerGlow {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 150%;
+  background: radial-gradient(
+    circle at 50% 0%,
+    rgba(99, 102, 241, 0.1) 0%,
+    transparent 60%
+  );
+  pointer-events: none;
+  z-index: -1;
+}
+
+@media (max-width: 768px) {
+  .nav {
+      gap: 2rem;
+      padding: 0 1rem;
+  }
+  
+  .logo {
+      font-size: 1.7rem;
+  }
+  
+  .link {
+      font-size: 0.95rem;
+  }
+}
