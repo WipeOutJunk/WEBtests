@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import styles from "./Header.module.css";
 
 const Header: React.FC = () => {
@@ -19,22 +19,27 @@ const Header: React.FC = () => {
 
   return (
     <header className={styles.bar}>
-
-
       <Link to="/" className={styles.logo}>
         <span className={styles.logoGradient}>IntelliTest</span>
-        <span style={{ color: "rgba(255,255,255,0.9)" }}>Suite</span>
       </Link>
 
       <nav className={styles.nav}>
-        <Link to="/" className={styles.link}>
+        <NavLink to="/"  className={({ isActive }) =>
+            `${styles.link} ${isActive ? styles.activeLink : ""}`
+          }
+        >
           Главная
           <span className={styles.linkUnderline}></span>
-        </Link>
-        <Link to="/features" className={styles.link}>
+        </NavLink>
+        <NavLink
+          to="/features"
+          className={({ isActive }) =>
+            `${styles.link} ${isActive ? styles.activeLink : ""}`
+          }
+        >
           Возможности
           <span className={styles.linkUnderline}></span>
-        </Link>
+        </NavLink>
       </nav>
     </header>
   );

@@ -112,7 +112,16 @@
   pointer-events: none;
   z-index: -1;
 }
+/* Header.module.css */
+.activeLink {
+  color: #a855f7 !important;
+  opacity: 1 !important;
+}
 
+.activeLink .linkUnderline {
+  width: 100% !important;
+  opacity: 1 !important;
+}
 @media (max-width: 768px) {
   .nav {
       gap: 2rem;
