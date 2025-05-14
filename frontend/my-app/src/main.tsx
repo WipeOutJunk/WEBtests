@@ -38,7 +38,9 @@ const router = createBrowserRouter([
 // App.tsx
 const App = () => null;
 export default App;
-
+if ("scrollRestoration" in window.history) {
+  window.history.scrollRestoration = "manual";
+}
 // Рендер приложения
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

@@ -1,22 +1,8 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Link, NavLink } from "react-router-dom";
 import styles from "./Header.module.css";
 
 const Header: React.FC = () => {
-  useEffect(() => {
-    const handleScroll = () => {
-      const header = document.querySelector(`.${styles.bar}`);
-      if (window.scrollY > 50) {
-        header?.classList.add(styles.scrolled);
-      } else {
-        header?.classList.remove(styles.scrolled);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
     <header className={styles.bar}>
       <Link to="/" className={styles.logo}>
@@ -24,7 +10,9 @@ const Header: React.FC = () => {
       </Link>
 
       <nav className={styles.nav}>
-        <NavLink to="/"  className={({ isActive }) =>
+        <NavLink
+          to="/"
+          className={({ isActive }) =>
             `${styles.link} ${isActive ? styles.activeLink : ""}`
           }
         >
@@ -40,6 +28,14 @@ const Header: React.FC = () => {
           Возможности
           <span className={styles.linkUnderline}></span>
         </NavLink>
+        
+        {/* Новая кнопка CTA */}
+        <Link 
+          to="/create" 
+          className={styles.ctaButton}
+        >
+          🚀 Начать создание тестов
+        </Link>
       </nav>
     </header>
   );

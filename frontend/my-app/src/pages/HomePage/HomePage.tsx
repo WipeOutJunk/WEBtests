@@ -38,17 +38,19 @@ const features = [
 const HomePage: React.FC = () => {
   const [showScroll, setShowScroll] = useState(false);
 
+  // 2. Сбрасываем прокрутку наверх при монтировании
   useEffect(() => {
-    const checkScroll = () => {
-      setShowScroll(window.pageYOffset > 400); // Показывать кнопку после 400px прокрутки
-    };
-    
-    window.addEventListener('scroll', checkScroll);
-    return () => window.removeEventListener('scroll', checkScroll);
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, []);
+
+  useEffect(() => {
+    const checkScroll = () => setShowScroll(window.pageYOffset > 400);
+    window.addEventListener("scroll", checkScroll);
+    return () => window.removeEventListener("scroll", checkScroll);
   }, []);
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
