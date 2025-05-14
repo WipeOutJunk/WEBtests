@@ -11,11 +11,9 @@
 }
 
 .glowEffect {
-  position: absolute;
+  position: fixed;
   top: -50%;
   left: 50%;
-  width: 100vmax; /* Используем viewport units */
-  height: 100vmax;
   transform: translate(-50%, -50%);
   pointer-events: none;
   overflow: hidden;
@@ -51,6 +49,7 @@
   margin-bottom: 1.5rem;
   position: relative;
   background: linear-gradient(45deg, #fff 65%, #6366f1);
+  background-clip: text ;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }

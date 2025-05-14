@@ -1,5 +1,4 @@
 .bar {
-  backdrop-filter: blur(25px) saturate(200%);
   background: linear-gradient(
       135deg,
       rgba(15, 15, 31, 0.95) 0%,
@@ -94,7 +93,6 @@
       rgba(9, 9, 9, 0.95) 100%
   );
   padding: 0.8rem 5%;
-  backdrop-filter: blur(35px) saturate(250%);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 

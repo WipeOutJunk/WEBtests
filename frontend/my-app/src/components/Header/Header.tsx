@@ -31,7 +31,7 @@ const Header: React.FC = () => {
         
         {/* Новая кнопка CTA */}
         <Link 
-          to="/create" 
+          to="/auth" 
           className={styles.ctaButton}
         >
           🚀 Начать создание тестов

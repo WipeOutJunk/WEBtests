@@ -59,6 +59,7 @@
   .featureHeader h2 {
     font-size: 2.2rem;
     background: linear-gradient(45deg, #fff 65%, #6366f1);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     margin: 0;
