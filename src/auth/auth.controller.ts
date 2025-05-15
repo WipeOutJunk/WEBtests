@@ -8,22 +8,97 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { LogoutDto } from './dto/logout.dto';
 import { RefreshDto } from './dto/refresh.dto';
+import { ConfirmDto } from './dto/confirm.dto';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private auth: AuthService) {}
 
+ 
   @Post('register')
   @ApiOperation({ summary: 'Регистрация' })
   register(@Body() dto: RegisterDto) {
     return this.auth.register(dto);
+  }
+
+  @Post('confirm')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Подтверждение email',
+    description: 'Активация аккаунта по коду подтверждения, отправленному на email',
+  })
+  @ApiBody({
+    type: ConfirmDto,
+    examples: {
+      normal: {
+        summary: 'Стандартный запрос',
+        value: {
+          email: 'user@example.com',
+          code: 'A1B2C3',
+        },
+      },
+      invalid: {
+        summary: 'Неверный код',
+        value: {
+          email: 'user@example.com',
+          code: 'WRONG',
+      },
+    },
+  }})
+  @ApiResponse({
+    status: 200,
+    description: 'Успешная активация аккаунта',
+    content: {
+      'application/json': {
+        example: {
+          message: 'Email успешно подтвержден',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Невалидные данные',
+    content: {
+      'application/json': {
+        examples: {
+          invalidCode: {
+            value: {
+              statusCode: 400,
+              message: 'Неверный код подтверждения',
+            },
+          },
+          expiredCode: {
+            value: {
+              statusCode: 400,
+              message: 'Код подтверждения истек',
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Пользователь не найден или уже активирован',
+    content: {
+      'application/json': {
+        example: {
+          statusCode: 404,
+          message: 'Пользователь не найден',
+        },
+      },
+    },
+  })
+  async confirm(@Body() dto: ConfirmDto) {
+    return this.auth.confirmEmail(dto);
   }
 
   @Post('login')

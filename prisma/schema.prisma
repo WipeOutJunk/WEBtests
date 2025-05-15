@@ -1,62 +1,78 @@
 generator client {
-    provider        = "prisma-client-js"
-    previewFeatures = ["postgresqlExtensions"]
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-    provider   = "postgresql"
-    url        = env("DATABASE_URL")
-    extensions = [pgcrypto]
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgcrypto]
 }
 
 enum UserRole {
-    ADMIN
-    TEACHER
-    STUDENT
+  ADMIN
+  TEACHER
+  STUDENT
 }
 
+/* ======================== МОДЕЛИ ======================== */
+
 model User {
-    id           String   @id @default(uuid())
-    email        String   @unique
-    passwordHash String
-    fullName     String
-    role         UserRole @default(STUDENT)
-    createdAt    DateTime @default(now())
+  id               String              @id @default(uuid())
+  email            String              @unique
+  passwordHash     String
+  fullName         String
+  role             UserRole            @default(STUDENT)
+  isEmailConfirmed Boolean             @default(false)      // ← НОВОЕ
+  createdAt        DateTime            @default(now())
 
-    lessons Lesson[]
-
-    RefreshToken RefreshToken[]
+  lessons          Lesson[]
+  refreshTokens    RefreshToken[]      // ← переименовали
+  emailVerifications EmailVerification[] // ← НОВОЕ
 }
 
 model RefreshToken {
-    id        String   @id @default(uuid())
-    token     String   @unique
-    userId    String   @unique
-    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-    expiresAt DateTime
-    createdAt DateTime @default(now())
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model EmailVerification {               // ← НОВОЕ
+  id        String   @id @default(uuid())
+  code      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Lesson {
-    id          String   @id @default(uuid())
-    title       String
-    description String?
-    pdfUrl      String
-    isPublic    Boolean  @default(false)
-    createdAt   DateTime @default(now())
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  pdfUrl      String
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
 
-    ownerId String?
-    owner   User?   @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  ownerId String?
+  owner   User?   @relation(fields: [ownerId], references: [id], onDelete: SetNull)
 
-    publicLink PublicLink?
+  publicLink PublicLink?
 }
 
 model PublicLink {
-    id        String    @id @default(uuid())
-    uuid      String    @unique
-    expiresAt DateTime?
-    createdAt DateTime  @default(now())
+  id        String    @id @default(uuid())
+  uuid      String    @unique
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
 
-    lessonId String @unique
-    lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  lessonId String  @unique
+  lesson   Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 }
