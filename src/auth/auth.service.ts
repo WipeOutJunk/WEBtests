@@ -1,13 +1,17 @@
 // auth.service.ts
-import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MailerService } from '@nestjs-modules/mailer';
 import { RegisterDto } from './dto/register.dto';
-import { LoginDto }    from './dto/login.dto';
-import { ConfirmDto }  from './dto/confirm.dto';
+import { LoginDto } from './dto/login.dto';
+import { ConfirmDto } from './dto/confirm.dto';
 import { addSeconds, isAfter } from 'date-fns';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
@@ -30,9 +34,11 @@ export class AuthService {
       dto.password,
       +this.cfg.get('SALT_ROUNDS') || 10,
     );
+    const defaultName = dto.email.split('@')[0] || 'Anonymous';
+
     const user = await this.users.create({
       email: dto.email,
-      fullName: dto.fullName,
+      fullName: dto.fullName?.trim() || defaultName,
       passwordHash: hash,
     });
 
@@ -48,14 +54,86 @@ export class AuthService {
       },
     });
 
+    const htmlTemplate = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            .container { 
+                max-width: 400px; 
+                display: flex;
+                align-items:center;
+                margin: 0 auto; 
+                background: #1A0B2E; 
+                border-radius: 12px; 
+                padding: 32px;
+                font-family: 'Segoe UI', system-ui, sans-serif;
+            }
+            .content {
+				
+            }
+            .logo {
+                color: #7C3AED;
+                font-size: 47px;
+                font-weight: 700;
+                margin-bottom: 24px;
+                text-align: center;
+            }
+            .code-box {
+                background: #2D0A57;
+                padding: 24px;
+                border-radius: 8px;
+                text-align: center;
+                margin: 24px 0;
+            }
+            .code {
+                color: #A78BFA;
+                font-size: 42px;
+                letter-spacing: 8px;
+                font-weight: 600;
+            }
+            .footer {
+                color: #6B46C1;
+                font-size: 12px;
+                text-align: center;
+                margin-top: 32px;
+            }
+        </style>
+    </head>
+    <body style="background: #0F0523; padding: 70px; height: 800px; display: flex;  ">
+        <div class="container">
+        <div class="content">
+         <div class="logo">intelliTest</div>
+            
+            <p style="color: #E9D5FF; line-height: 1.6; ">
+                Спасибо за регистрацию! Для активации вашего аккаунта 
+                используйте следующий код подтверждения:
+            </p>
+    
+            <div class="code-box">
+                <div class="code">${code}</div>
+            </div>
+    
+            <p style="color: #C4B5FD; font-size: 14px;">
+                ⏳ Код действителен в течение 15 минут<br>
+                🔒 Никому не сообщайте этот код
+            </p>
+    
+            <div class="footer">
+                С уважением, команда intelliTest<br>
+                <span style="font-size: 10px; opacity: 0.8;">Это автоматическое письмо, не отвечайте на него</span>
+            </div>
+        <div/>
+        
+        </div>
+    </body>
+    </html>
+    `;
+
     await this.mailer.sendMail({
       to: user.email,
-      subject: 'Код подтверждения',
-      html: `
-      <p>Ваш код подтверждения для ПК-клуба «Тактика»:</p>
-      <h2 style="letter-spacing:3px">${code}</h2>
-      <p>Код действителен 15 минут.</p>
-    `,
+      subject: '🔒 Код подтверждения для intelliTest',
+      html: htmlTemplate,
     });
 
     return { message: 'verification_sent' };

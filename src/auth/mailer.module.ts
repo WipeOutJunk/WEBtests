@@ -15,7 +15,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
         },
       },
       defaults: {
-        from: '"ПК-клуб Тактика" <no-reply@tactica.gg>',
+        from: '"Сервис создания IntelliTest" <no-reply>',
       },
     }),
   ],
