@@ -15,4 +15,16 @@ export class AttemptService {
       },
     });
   }
+  async getAttempts(limit: number, userId: string) {
+    return this.prisma.attempt.findMany({
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      where: {
+        lesson: { ownerId: userId }, // Фильтруем попытки по урокам, принадлежащим пользователю
+      },
+      include: {
+        lesson: { select: { title: true } }, // Получаем название урока
+      },
+    });
+  }
 }

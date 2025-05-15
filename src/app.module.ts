@@ -5,10 +5,11 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
-import { AttemptModule } from './attempt/attempt.module';
+import { AttemptsModule } from './attempt/attempt.module';
 import { LessonsModule } from './lessons/lessons.module';
 import { PublicModule } from './public/public.module';
 import { StatsModule } from './stats/stats.module';
+import { TestsModule } from './tests/tests.module';
 
 @Module({
   imports: [
@@ -16,10 +17,11 @@ import { StatsModule } from './stats/stats.module';
     PrismaModule,
     UsersModule,
     AuthModule,
-    AttemptModule,
+    AttemptsModule,
     LessonsModule,
     PublicModule,
     StatsModule,
+    TestsModule
   ],
   controllers: [AppController],
   providers: [AppService],
