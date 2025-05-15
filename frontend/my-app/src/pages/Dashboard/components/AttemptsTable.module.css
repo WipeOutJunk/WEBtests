@@ -1,0 +1,35 @@
+.wrapper {
+  overflow-x: auto;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(99,102,241,0.15);
+  border-radius: 16px;
+  padding: 1.5rem;
+}
+
+h3 {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .875rem;
+}
+
+th, td {
+  padding: .75rem 1rem;
+  text-align: left;
+}
+
+thead {
+  background: rgba(99,102,241,0.08);
+}
+
+tbody tr:nth-child(odd) {
+  background: rgba(255,255,255,0.02);
+}
+
+tbody tr:hover {
+  background: rgba(99,102,241,0.05);
+}

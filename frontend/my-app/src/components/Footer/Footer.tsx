@@ -19,8 +19,8 @@ const Footer: React.FC = () => (
 
       <div className={styles.section}>
         <h4 className={styles.title}>Контакты</h4>
-        <a href="mailto:support@intellitest.ru" className={styles.link}>
-          support@intellitest.ru
+        <a href="mailto:imperia791@gmail.com" className={styles.link}>
+          imperia791@gmail.com
         </a>
         <a href="tel:+78005553535" className={styles.link}>
           8 (800) 555-35-35
@@ -28,7 +28,11 @@ const Footer: React.FC = () => (
       </div>
 
       <div className={styles.socials}>
-        <a href="#" className={styles.socialLink} aria-label="GitHub">
+        <a
+          href="https://github.com/WipeOutJunk/WEBtests"
+          className={styles.socialLink}
+          aria-label="GitHub"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             x="0px"

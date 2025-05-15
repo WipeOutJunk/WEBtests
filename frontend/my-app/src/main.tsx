@@ -10,7 +10,10 @@ import AuthPage from "./pages/AuthPage/AuthPage";
 import "./index.css";
 import { Provider } from "react-redux";
 import { store } from "./store";
-// Основной лейаут
+import { PrivateRoute } from "./components/PrivateRoute";
+import Dashboard from "./pages/Dashboard/DashBoard";
+;
+
 const MainLayout = () => (
   <>
     <Header />
@@ -40,6 +43,15 @@ const router = createBrowserRouter([
       },
     ],
   },
+  {
+    element: <MainLayout/>,
+    children: [
+      {
+        path:'/dashboard',
+        element:<PrivateRoute><Dashboard></Dashboard></PrivateRoute>
+      }
+    ]
+  }
 ]);
 
 // App.tsx

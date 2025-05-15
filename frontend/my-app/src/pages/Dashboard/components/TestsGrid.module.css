@@ -1,0 +1,45 @@
+.grid {
+  margin-top: 2.5rem;
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: repeat(auto-fill,minmax(260px,1fr));
+}
+
+.card {
+  position: relative;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(99,102,241,0.16);
+  border-radius: 16px;
+  padding: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+  transition: transform .25s, box-shadow .25s;
+  overflow: hidden;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 14px 32px rgba(99,102,241,0.18);
+  background: rgba(99,102,241,0.05);
+}
+
+.title {
+  font-size: 1.125rem;
+  line-height: 1.3;
+}
+
+.badge {
+  font-size: .75rem;
+  padding: 2px 8px;
+  border-radius: 6px;
+  align-self: flex-start;
+  background: #ffb359;
+  color: #000;
+}
+
+.date {
+  font-size: .75rem;
+  opacity: .7;
+}

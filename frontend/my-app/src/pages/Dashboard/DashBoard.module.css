@@ -1,0 +1,48 @@
+/* общий фон + лёгкое свечение, полный паритет с HomePage */
+.layout {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: radial-gradient(circle at top left, #0f0f1f 0%, #090909 100%);
+    color: #fafafa;
+    overflow: hidden;       /* скрываем лишние эффекты */
+  }
+  
+  .glowEffect {
+    position: fixed;
+    top: -50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    width: 200vw;
+    height: 200vw;
+    background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 60%);
+    animation: rotateGlow 25s linear infinite;
+  }
+  
+  @keyframes rotateGlow {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+  
+  .main {
+    flex: 1 1 auto;
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 2rem clamp(1rem, 4vw, 3rem);
+    z-index: 2;             /* поверх свечения */
+  }
+  
+  .row {
+    margin-top: 2rem;
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 2rem;
+  }
+  
+  @media (max-width: 900px) {
+    .row { grid-template-columns: 1fr; }
+  }
+  
