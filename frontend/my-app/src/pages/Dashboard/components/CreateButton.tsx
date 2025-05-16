@@ -6,7 +6,7 @@ import styles from "./CreateButton.module.css";
 const CreateButton: React.FC = () => {
   const navigate = useNavigate();
   return (
-    <button className={styles.btn} onClick={() => navigate("/tests/new")}>
+    <button className={styles.btn} onClick={() => navigate("/create")}>
       <Plus size={22} />
       <span>Создать тест</span>
     </button>

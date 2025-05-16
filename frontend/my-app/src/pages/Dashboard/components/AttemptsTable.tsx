@@ -11,19 +11,17 @@ const AttemptsTable: React.FC = () => {
       <table>
         <thead>
           <tr>
-            <th>Тест / опрос</th>
-            <th>Дата</th>
+            <th>Тест</th>
             <th>Участник</th>
-            <th>Баллы</th>
+            <th>Дата</th>
           </tr>
         </thead>
         <tbody>
           {attempts.map(a => (
             <tr key={a.id}>
               <td>{a.title}</td>
-              <td>{new Date(a.date).toLocaleString()}</td>
               <td>{a.participant}</td>
-              <td>{a.score ?? "—"}</td>
+              <td>{new Date(a.date).toLocaleDateString()}</td>
             </tr>
           ))}
         </tbody>

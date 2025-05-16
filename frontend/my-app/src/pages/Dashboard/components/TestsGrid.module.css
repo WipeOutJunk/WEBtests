@@ -43,3 +43,28 @@
   font-size: .75rem;
   opacity: .7;
 }
+/* TestsGrid.module.css */
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.actions button {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  background: rgba(99, 102, 241, 0.1);
+  transition: all 0.2s;
+}
+
+.actions button:hover {
+  background: rgba(99, 102, 241, 0.2);
+}
+
+.draft {
+  background: #f59e0b;
+}
+
+.published {
+  background: #10b981;
+}

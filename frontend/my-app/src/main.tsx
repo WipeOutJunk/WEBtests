@@ -12,6 +12,7 @@ import { Provider } from "react-redux";
 import { store } from "./store";
 import { PrivateRoute } from "./components/PrivateRoute";
 import Dashboard from "./pages/Dashboard/DashBoard";
+import TestConstructor from "./pages/TestConstructor/TestConstructor";
 ;
 
 const MainLayout = () => (
@@ -49,6 +50,11 @@ const router = createBrowserRouter([
       {
         path:'/dashboard',
         element:<PrivateRoute><Dashboard></Dashboard></PrivateRoute>
+      },
+      {
+        path:'/create',
+        element:<PrivateRoute><TestConstructor/></PrivateRoute>
+
       }
     ]
   }

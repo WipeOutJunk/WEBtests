@@ -1,10 +1,10 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
 export interface Stats {
-  tests: number;
-  polls: number;
-  avgScore: number;
+  totalTests: number;
+  publishedTests: number;
   attempts24h: number;
+  totalAttempts: number;
 }
 
 export interface Attempt {
@@ -20,6 +20,7 @@ export interface TestCard {
   title: string;
   status: 'draft' | 'published';
   createdAt: string;
+  attemptsCount?: number;
 }
 
 interface DashboardState {
@@ -31,7 +32,7 @@ interface DashboardState {
 }
 
 const initialState: DashboardState = {
-  stats: { tests: 0, polls: 0, avgScore: 0, attempts24h: 0 },
+  stats: { totalTests: 0, publishedTests: 0, totalAttempts: 0, attempts24h: 0 },
   attempts: [],
   tests: [],
   loading: false,
