@@ -7,7 +7,12 @@ export class TestsService {
 
   async getTests(userId: string) {
     return this.prisma.lesson.findMany({
-      where: { ownerId: userId },
-    });
+        where: { ownerId: userId },
+        include: {
+          _count: {
+            select: { attempts: true }
+          }
+        }
+      });
   }
 }
