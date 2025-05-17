@@ -97,53 +97,60 @@ export class AuthController {
       },
     },
   })
-  async confirm(@Body() dto: ConfirmDto) {
-    return this.auth.confirmEmail(dto);
-  }
+  async confirm(@Body() dto: ConfirmDto,
+              @Res({ passthrough: true }) res: Response) {
+  const { accessToken, refreshToken, expiresIn } =
+        await this.auth.confirmEmail(dto);
+
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    path: '/',
+    maxAge: expiresIn * 1000 * 7,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+  });
+
+  return { accessToken, refreshToken, expiresIn };
+}
 
   @Post('login')
   @HttpCode(200)
-  async login(
-    @Body() dto: LoginDto,
-    @Res({ passthrough: true }) res: Response, // ← здесь
-  ) {
+  async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
     const { accessToken, refreshToken, expiresIn } = await this.auth.login(dto);
+  
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      path: '/auth/refresh',
+      path: '/',                     
       maxAge: expiresIn * 1000 * 7,
-      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
     });
-    return { accessToken, expiresIn };
+  
+    return { accessToken, refreshToken, expiresIn }
   }
 
   @Post('refresh')
-  @ApiOperation({ summary: 'Обновление access + refresh токенов' })
-  @ApiBody({ type: RefreshDto })
   @HttpCode(200)
   async refresh(
     @Body('refreshToken') bodyToken: string,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-
     const token = bodyToken ?? req.cookies['refreshToken'];
-    if (!token) {
-      throw new UnauthorizedException('Refresh token not provided');
-    }
-
+    if (!token) throw new UnauthorizedException('Refresh token not provided');
+  
     const { accessToken, refreshToken, expiresIn } = await this.auth.refresh(token);
-
+  
+    // кладём cookie как и раньше
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      path: '/auth/refresh',
-      maxAge: expiresIn * 1000 * 7,  
+      path: '/',
+      maxAge: expiresIn * 1000 * 7,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
     });
-
-    return { accessToken, expiresIn };
+  
+    return { accessToken, refreshToken, expiresIn };
   }
 
   @Post('logout')
