@@ -3,14 +3,14 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 /* ---------- THUNKS -------------------------------------------------- */
 export const login = createAsyncThunk<
-  { accessToken: string; expiresIn: number },
+  { accessToken: string; refreshToken: string; expiresIn: number },
   { email: string; password: string },
   { rejectValue: string }
 >("auth/login", async (body, { rejectWithValue }) => {
   const res = await fetch("api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    credentials: "include", // <-- cookie refresh
+    credentials: "include",
     body: JSON.stringify(body),
   });
   if (!res.ok) return rejectWithValue(await res.text());
@@ -47,17 +47,38 @@ export const confirm = createAsyncThunk<
   return res.json();
 });
 
+export const refreshToken = createAsyncThunk<
+  { accessToken: string; refreshToken: string; expiresIn: number },
+  void,
+  { rejectValue: string }
+>('auth/refresh', async (_, { rejectWithValue }) => {
+  const stored = localStorage.getItem('refresh');   // может быть null
+
+  const res = await fetch('/api/auth/refresh', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',                         // cookie по-любому придёт
+    body: stored ? JSON.stringify({ refreshToken: stored }) : undefined,
+  });
+
+  if (!res.ok) return rejectWithValue(await res.text());
+  return res.json();                                // { accessToken, refreshToken }
+});
+
+
 /* ---------- STATE --------------------------------------------------- */
 interface AuthState {
   status: "idle" | "loading" | "succeeded" | "failed";
   error: string | null;
   token: string | null;
+  isCheckingToken: boolean; 
 }
 
 const initialState: AuthState = {
   status: "idle",
   error: null,
-  token: localStorage.getItem("access"), // <-- читаем при старте
+  token: localStorage.getItem("access"), 
+  isCheckingToken: false
 };
 
 /* ---------- SLICE --------------------------------------------------- */
@@ -73,8 +94,9 @@ const authSlice = createSlice({
     });
     b.addCase(login.fulfilled, (s, a) => {
       s.status = "succeeded";
-      s.token = a.payload.accessToken; // ← accessToken
-      localStorage.setItem("access", a.payload.accessToken); // <-- сохраняем
+      s.token = a.payload.accessToken;
+      localStorage.setItem("access", a.payload.accessToken);
+      localStorage.setItem("refresh", a.payload.refreshToken); // Сохраняем refreshToken
     });
     b.addCase(login.rejected, (s, a) => {
       s.status = "failed";
@@ -107,6 +129,27 @@ const authSlice = createSlice({
     b.addCase(confirm.rejected, (s, a) => {
       s.status = "failed";
       s.error = a.payload ?? a.error.message ?? "Ошибка";
+    });
+    // refresh
+    b.addCase(refreshToken.pending, (s) => {
+      s.isCheckingToken = true;
+      s.error = null;
+    });
+    b.addCase(refreshToken.fulfilled, (state, action) => {
+      state.isCheckingToken = false;
+      state.status = 'succeeded';
+      state.token = action.payload.accessToken;
+    
+
+      localStorage.setItem('access', action.payload.accessToken);
+      localStorage.setItem('refresh', action.payload.refreshToken);
+    });
+    b.addCase(refreshToken.rejected, (s, a) => {
+      s.isCheckingToken = false;
+      s.status = "failed";
+      s.error = a.payload ?? "Не удалось обновить токен";
+      s.token = null; // Очищаем токен
+      localStorage.removeItem("access"); // Удаляем из localStorage
     });
   },
 });

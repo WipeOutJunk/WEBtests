@@ -1,4 +1,11 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import {
+  createAsyncThunk,
+  createSlice,
+  type AsyncThunkAction,
+  type ThunkDispatch,
+  type UnknownAction,
+} from "@reduxjs/toolkit";
+import { refreshToken } from "./authSlice";
 
 export interface Stats {
   totalTests: number;
@@ -18,7 +25,7 @@ export interface Attempt {
 export interface TestCard {
   id: string;
   title: string;
-  status: 'draft' | 'published';
+  status: "draft" | "published";
   createdAt: string;
   attemptsCount?: number;
 }
@@ -39,79 +46,132 @@ const initialState: DashboardState = {
   error: null,
 };
 
-export const fetchStats = createAsyncThunk<Stats, void, { rejectValue: string }>(
-  'dashboard/fetchStats',
-  async (_, { rejectWithValue }) => {
-    try {
-      const token = localStorage.getItem('access');
-      const res = await fetch('/api/dashboard/stats', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!res.ok) {
-        const errorData = await res.json(); // Предполагаем, что сервер возвращает JSON с ошибкой
-        return rejectWithValue(errorData.message || 'Не удалось загрузить статистику');
+export const fetchStats = createAsyncThunk<
+  Stats,
+  void,
+  { rejectValue: string }
+>("dashboard/fetchStats", async (_, { dispatch, rejectWithValue }) => {
+  try {
+    const token = localStorage.getItem("access");
+    const res = await fetch("/api/dashboard/stats", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (res.status === 401) {
+      // Пробуем обновить токен
+      const refreshResult = await dispatch(refreshToken());
+      if (refreshToken.fulfilled.match(refreshResult)) {
+        const newToken = refreshResult.payload.accessToken;
+        // Повторяем запрос с новым токеном
+        const retryRes = await fetch("/api/dashboard/stats", {
+          headers: {
+            Authorization: `Bearer ${newToken}`,
+            "Content-Type": "application/json",
+          },
+        });
+        if (!retryRes.ok) throw new Error(await retryRes.text());
+        return retryRes.json();
+      } else {
+        throw new Error("Не удалось обновить токен");
       }
-      return res.json();
-    } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Неизвестная ошибка');
     }
-  },
-);
+    if (!res.ok) {
+      const errorData = await res.json(); // Предполагаем, что сервер возвращает JSON с ошибкой
+      return rejectWithValue(
+        errorData.message || "Не удалось загрузить статистику"
+      );
+    }
+    return res.json();
+  } catch (error) {
+    return rejectWithValue(
+      error instanceof Error ? error.message : "Неизвестная ошибка"
+    );
+  }
+});
 
 export const fetchAttempts = createAsyncThunk<
   Attempt[],
   { limit: number },
   { rejectValue: string }
->(
-  'dashboard/fetchAttempts',
-  async ({ limit }, { rejectWithValue }) => {
-    try {
-      const token = localStorage.getItem('access');
-      const res = await fetch(`/api/attempts?limit=${limit}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!res.ok) {
-        const errorData = await res.json();
-        return rejectWithValue(errorData.message || 'Не удалось загрузить попытки');
+>("dashboard/fetchAttempts", async ({ limit }, { dispatch,rejectWithValue }) => {
+  try {
+    const token = localStorage.getItem("access");
+    const res = await fetch(`/api/attempts?limit=${limit}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (res.status == 401) {
+      const refreshResult = await dispatch(refreshToken());
+      if (refreshToken.fulfilled.match(refreshResult)) {
+        const token = localStorage.getItem("access");
+        const retryRes = await fetch(`/api/attempts?limit=${limit}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!retryRes.ok) throw new Error(await retryRes.text());
+        return retryRes.json();
+      } else {
+        throw new Error("Не удалось обновить токен");
       }
-      return res.json();
-    } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Неизвестная ошибка');
     }
-  },
-);
+    if (!res.ok) {
+      const errorData = await res.json();
+      return rejectWithValue(
+        errorData.message || "Не удалось загрузить попытки"
+      );
+    }
+    return res.json();
+  } catch (error) {
+    return rejectWithValue(
+      error instanceof Error ? error.message : "Неизвестная ошибка"
+    );
+  }
+});
 
 export const fetchTests = createAsyncThunk<
   TestCard[],
   void,
   { rejectValue: string }
->(
-  'dashboard/fetchTests',
-  async (_, { rejectWithValue }) => {
-    try {
-      const token = localStorage.getItem('access');
-      const res = await fetch('/api/tests', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!res.ok) {
-        const errorData = await res.json();
-        return rejectWithValue(errorData.message || 'Не удалось загрузить тесты');
+>("dashboard/fetchTests", async (_, { dispatch, rejectWithValue }) => {
+  try {
+    const token = localStorage.getItem("access");
+    const res = await fetch("/api/tests", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (res.status == 401) {
+      const refreshResult = await dispatch(refreshToken());
+      if (refreshToken.fulfilled.match(refreshResult)) {
+        const token = localStorage.getItem("access");
+        const retryRes = await fetch("/api/tests", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!retryRes.ok) throw new Error(await retryRes.text());
+        return retryRes.json();
+      } else {
+        throw new Error('no refres');
       }
-      return res.json();
-    } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Неизвестная ошибка');
     }
-  },
-);
+    if (!res.ok) {
+      const errorData = await res.json();
+      return rejectWithValue(errorData.message || "Не удалось загрузить тесты");
+    }
+    return res.json();
+  } catch (error) {
+    return rejectWithValue(
+      error instanceof Error ? error.message : "Неизвестная ошибка"
+    );
+  }
+});
 
 const dashboardSlice = createSlice({
-  name: 'dashboard',
+  name: "dashboard",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
@@ -126,7 +186,7 @@ const dashboardSlice = createSlice({
       })
       .addCase(fetchStats.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || 'Неизвестная ошибка'; // Убеждаемся, что всегда строка
+        state.error = action.payload || "Неизвестная ошибка"; // Убеждаемся, что всегда строка
       })
       .addCase(fetchAttempts.pending, (state) => {
         state.loading = true;
@@ -138,7 +198,7 @@ const dashboardSlice = createSlice({
       })
       .addCase(fetchAttempts.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || 'Неизвестная ошибка'; // Убеждаемся, что всегда строка
+        state.error = action.payload || "Неизвестная ошибка"; // Убеждаемся, что всегда строка
       })
       .addCase(fetchTests.pending, (state) => {
         state.loading = true;
@@ -150,9 +210,11 @@ const dashboardSlice = createSlice({
       })
       .addCase(fetchTests.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || 'Неизвестная ошибка'; // Убеждаемся, что всегда строка
+        state.error = action.payload || "Неизвестная ошибка"; // Убеждаемся, что всегда строка
       });
   },
 });
 
 export default dashboardSlice.reducer;
+
+
