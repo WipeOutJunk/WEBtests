@@ -174,21 +174,32 @@ export class AuthService {
   }
 
   async refresh(refreshToken: string) {
-    const payload = this.jwt.verify(refreshToken, {
-      secret: this.cfg.get('JWT_REFRESH_SECRET'),
-    }) as { sub: string; email: string; jti: string };
-
-    // проверяем в БД, что такой refresh ещё валиден
-    const stored = await this.prisma.refreshToken.findUnique({
-      where: { id: payload.jti },
-    });
-    if (!stored || stored.expiresAt < new Date())
-      throw new UnauthorizedException('Refresh token expired / revoked');
-
-    // ротация: помечаем старый как удалённый и выдаём новый
-    await this.prisma.refreshToken.delete({ where: { id: stored.id } });
-
-    return this.issueTokenPair(payload.sub, payload.email);
+    try {
+      const payload = this.jwt.verify(refreshToken, {
+        secret: this.cfg.get('JWT_REFRESH_SECRET'),
+      }) as { sub: string; email: string; jti: string };
+      console.log("Извлечённый payload:", payload);
+  
+      const stored = await this.prisma.refreshToken.findUnique({
+        where: { id: payload.jti },
+      });
+      console.log("Найденный refreshToken в базе:", stored);
+  
+      if (!stored) {
+        console.log("Токен не найден в базе для jti:", payload.jti);
+        throw new UnauthorizedException('Refresh token not found');
+      }
+      if (stored.expiresAt < new Date()) {
+        console.log("Токен истёк для jti:", payload.jti);
+        throw new UnauthorizedException('Refresh token expired');
+      }
+  
+      await this.prisma.refreshToken.delete({ where: { id: stored.id } });
+      return this.issueTokenPair(payload.sub, payload.email);
+    } catch (error) {
+      console.error("Ошибка при обновлении токена:", error);
+      throw new UnauthorizedException('Invalid refresh token');
+    }
   }
   async logout(refreshToken: string) {
     // Проверяем валидность и извлекаем JTI
