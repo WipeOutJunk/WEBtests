@@ -1,24 +1,41 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsString,
+  IsOptional,
+  IsBoolean,
+  IsInt,
+  Min,
+  ValidateNested,
+  IsArray,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+import { QuestionDto } from './question.dto';
 
 export class CreateLessonDto {
-  @ApiProperty({ example: 'Основы TypeScript', description: 'Название теста' })
+  /* ---------- базовые поля ---------- */
+  @IsString()
   title: string;
 
-  @ApiPropertyOptional({
-    example: 'Базовые концепты TypeScript',
-    description: 'Описание теста',
-  })
+  @IsOptional()
+  @IsString()
   description?: string;
 
-  @ApiProperty({
-    example: { questions: [] },
-    description: 'Структура теста в JSON-формате',
-  })
-  content: any;
+  /** длительность (мин), 0 = без ограничения */
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  duration?: number;
 
-  @ApiPropertyOptional({
-    example: 'https://example.com/test.pdf',
-    description: 'Ссылка на PDF-материал',
-  })
-  pdfUrl?: string;
+  /** публичен ли тест */
+  @IsBoolean()
+  isPublic: boolean;
+
+  /** обязательно ли вводить email учащемуся */
+  @IsBoolean()
+  requireEmail: boolean;
+
+  /* ---------- вопросы ---------- */
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => QuestionDto)
+  questions: QuestionDto[];
 }
