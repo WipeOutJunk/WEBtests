@@ -18,7 +18,9 @@ import {
 import { LessonsService } from './lessons.service';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { JwtGuard } from 'src/auth/jwt.guard';
-
+interface RequestWithUser extends Request {
+  user: { userId: string; email: string; role: string };
+}
 @ApiTags('lessons')
 @Controller('lessons')
 export class LessonsController {
@@ -74,9 +76,9 @@ export class LessonsController {
   @ApiResponse({ status: 403, description: 'Forbidden — недостаточно прав' })
   async create(
     @Body() dto: CreateLessonDto,
-    @Req() req: Request,
+    @Req() req: RequestWithUser,
   ) {
-    const userId = req.user!['sub']; // id залогиненного автора
+    const userId = req.user.userId; // id залогиненного автора
     return this.lessons.create(userId, dto);
   }
 }

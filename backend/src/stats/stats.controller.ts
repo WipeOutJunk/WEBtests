@@ -4,7 +4,7 @@ import { JwtGuard } from '../auth/jwt.guard';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
 interface RequestWithUser extends Request {
-  user: { id: string; email: string; role: string };
+  user: { userId: string; email: string; role: string };
 }
 
 @ApiTags('Stats')
@@ -19,7 +19,7 @@ export class StatsController {
   @ApiResponse({ status: 200, description: 'Статистика успешно получена', type: Object })
   @ApiResponse({ status: 401, description: 'Неавторизован' })
   async getStats(@Req() req: RequestWithUser) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     return this.statsService.getDashboardStats(userId);
   }
 }
