@@ -23,11 +23,14 @@ export interface Attempt {
 }
 
 export interface TestCard {
+  isPublic: boolean;
   id: string;
   title: string;
   status: "draft" | "published";
   createdAt: string;
   attemptsCount?: number;
+  publicLink:  string | null;
+
 }
 
 interface DashboardState {

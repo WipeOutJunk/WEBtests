@@ -7,13 +7,12 @@ import Footer from "./components/Footer/Footer";
 import HomePage from "./pages/HomePage/HomePage";
 import FeaturesPage from "./pages/FeaturesPage/FeaturesPage";
 import AuthPage from "./pages/AuthPage/AuthPage";
-import "./index.css";
-import { Provider } from "react-redux";
-import { store } from "./store";
-import { PrivateRoute } from "./components/PrivateRoute";
 import Dashboard from "./pages/Dashboard/DashBoard";
 import TestConstructor from "./pages/TestConstructor/TestConstructor";
-;
+import { PrivateRoute } from "./components/PrivateRoute";
+import { Provider } from "react-redux";
+import { store } from "./store";
+import "./index.css";
 
 const MainLayout = () => (
   <>
@@ -25,48 +24,36 @@ const MainLayout = () => (
   </>
 );
 
-// Конфигурация маршрутов
 const router = createBrowserRouter([
   {
     element: <MainLayout />,
     children: [
-      {
-        path: "/",
-        element: <HomePage />,
-      },
-      {
-        path: "/features",
-        element: <FeaturesPage />,
-      },
-      {
-        path: "/auth",
-        element: <AuthPage />,
-      },
+      { path: "/", element: <HomePage /> },
+      { path: "/features", element: <FeaturesPage /> },
+      { path: "/auth", element: <AuthPage /> },
     ],
   },
   {
-    element: <MainLayout/>,
+    element: <MainLayout />,
     children: [
+      { path: "/dashboard", element: <PrivateRoute><Dashboard /></PrivateRoute> },
+      { path: "/create",    element: <PrivateRoute><TestConstructor /></PrivateRoute> },
       {
-        path:'/dashboard',
-        element:<PrivateRoute><Dashboard></Dashboard></PrivateRoute>
+        path: "/tests/:id/edit",
+        element: (
+          <PrivateRoute>
+            <TestConstructor />
+          </PrivateRoute>
+        ),
       },
-      {
-        path:'/create',
-        element:<PrivateRoute><TestConstructor/></PrivateRoute>
-
-      }
-    ]
-  }
+    ],
+  },
 ]);
 
-// App.tsx
-const App = () => null;
-export default App;
 if ("scrollRestoration" in window.history) {
   window.history.scrollRestoration = "manual";
 }
-// Рендер приложения
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Provider store={store}>

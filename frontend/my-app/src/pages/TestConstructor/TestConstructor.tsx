@@ -1,18 +1,24 @@
-import React, { useState, useCallback, useEffect } from 'react';
+// src/pages/TestConstructor/TestConstructor.tsx
+import React, { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { Switch } from 'antd';
-import { PlusCircle, Trash2, Eye } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Eye, PlusCircle, Trash2 } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import clsx from 'clsx';
 
 import { useAppDispatch, useAppSelector } from '../../store';
 import {
   createLesson,
+  updateLesson,
+  fetchLesson,
   resetLessonState,
+  selectLessonStatus,
+  selectLessonError,
+  selectCurrentLesson,
 } from '../../store/lessonSlice';
-import type { LessonState } from '../../store/lessonSlice';   // ← тип
 
 import styles from './TestConstructor.module.css';
 
-/* ---------- TYPES ----------------------------------------- */
+/* ---------- TYPES ----------------------------------- */
 export type QuestionType = 'single' | 'multiple' | 'text';
 
 export interface AnswerOption {
@@ -20,7 +26,6 @@ export interface AnswerOption {
   text: string;
   correct: boolean;
 }
-
 export interface Question {
   id: number;
   type: QuestionType;
@@ -29,19 +34,18 @@ export interface Question {
   correctAnswer?: string;
   explanation?: string;
 }
-
 export interface TestData {
   title: string;
   description?: string;
   isPublic: boolean;
   requireEmail: boolean;
   isQuiz: boolean;
-  duration: number;      // минуты
+  duration: number;
   questions: Question[];
   lessonContent?: string;
 }
 
-/* ---------- UI-HELPERS ----------------------------------- */
+/* ---------- UI HELPERS -------------------------------- */
 const InputBlock: React.FC<{
   label: string;
   value: string;
@@ -81,28 +85,15 @@ const SwitchRow: React.FC<{
   </div>
 );
 
-const Editor: React.FC<{ value: string; onChange: (v: string) => void }> = ({
-  value,
-  onChange,
-}) => (
-  <textarea
-    rows={6}
-    className={`${styles.input} ${styles.textarea}`}
-    value={value}
-    onChange={(e) => onChange(e.target.value)}
-  />
-);
-
-/* ---------- PREVIEW -------------------------------------- */
+/* ---------- PREVIEW ---------------------------------- */
 const TestPreview: React.FC<{ data: TestData }> = ({ data }) => (
   <div className={styles.preview}>
     <h2 className={styles.previewTitle}>{data.title || '— без названия —'}</h2>
-
     {data.description && <p className={styles.previewDesc}>{data.description}</p>}
 
     <p className={styles.previewMeta}>
-      Длительность:&nbsp;<strong>{data.duration} мин</strong>&nbsp;|&nbsp;
-      Участник {data.requireEmail ? 'обязан' : 'не обязан'} вводить e-mail
+      Длительность:&nbsp;<strong>{data.duration} мин</strong>&nbsp;|&nbsp;Участник&nbsp;
+      {data.requireEmail ? 'обязан' : 'не обязан'} вводить e-mail
     </p>
 
     {data.questions.map((q, i) => (
@@ -114,12 +105,13 @@ const TestPreview: React.FC<{ data: TestData }> = ({ data }) => (
 
         {q.type !== 'text' ? (
           <ul className={styles.previewOptions}>
-            {q.options?.map((opt) => (
+            {q.options?.map((opt, optIdx) => (
               <li
-                key={opt.id}
-                className={`${styles.previewOption} ${
-                  opt.correct ? styles.correctOption : ''
-                }`}
+                key={`${q.id}-${optIdx}`}               
+                className={clsx(
+                  styles.previewOption,
+                  opt.correct && styles.correctOption
+                )}
               >
                 {opt.text || '—'}
               </li>
@@ -138,15 +130,14 @@ const TestPreview: React.FC<{ data: TestData }> = ({ data }) => (
   </div>
 );
 
-/* ---------- QUESTION-EDITOR ------------------------------ */
+/* ---------- QUESTION EDITOR -------------------------- */
 interface QuestionEditorProps {
   question: Question;
   index: number;
   onUpdate: (i: number, f: string, v: any) => void;
-  onDeleteOption: (optI: number) => void;
+  onDeleteOption: (optIdx: number) => void;
   onAddOption: () => void;
 }
-
 const QuestionEditor: React.FC<QuestionEditorProps> = ({
   question,
   index,
@@ -175,17 +166,17 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
         <h4 className={styles.subtitle}>Варианты ответов:</h4>
 
         {question.options?.map((opt, optIdx) => (
-          <div key={opt.id} className={styles.optionRow}>
+          <div key={`${question.id}-${optIdx}`} className={styles.optionRow}>
             <input
-              className={`${styles.input} ${styles.optionInput}`}
+              className={clsx(styles.input, styles.optionInput)}
               value={opt.text}
               onChange={(e) =>
                 onUpdate(
                   index,
                   'options',
                   question.options?.map((o, i) =>
-                    i === optIdx ? { ...o, text: e.target.value } : o,
-                  ),
+                    i === optIdx ? { ...o, text: e.target.value } : o
+                  )
                 )
               }
               placeholder={`Вариант ${optIdx + 1}`}
@@ -200,8 +191,8 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                     index,
                     'options',
                     question.options?.map((o, i) =>
-                      i === optIdx ? { ...o, correct: e.target.checked } : o,
-                    ),
+                      i === optIdx ? { ...o, correct: e.target.checked } : o
+                    )
                   )
                 }
               />
@@ -209,8 +200,8 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
             </label>
             <button
               type="button"
-              className={`${styles.btn} ${styles.btnDanger} ${styles.btnIcon}`}
-              onClick={() => onDeleteOption(optIdx)}
+              className={clsx(styles.btn, styles.btnDanger, styles.btnIcon)}
+              onClick={() => onDeleteOption(optIdx)}          
             >
               <Trash2 size={16} />
             </button>
@@ -219,7 +210,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
 
         <button
           type="button"
-          className={`${styles.btn} ${styles.btnSecondary}`}
+          className={clsx(styles.btn, styles.btnSecondary)}
           onClick={onAddOption}
         >
           <PlusCircle size={20} className={styles.btnIcon} />
@@ -237,20 +228,17 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
   </div>
 );
 
-/* ---------- MAIN COMPONENT ------------------------------- */
+/* ---------- MAIN ------------------------------------- */
 const TestConstructor: React.FC = () => {
+  const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
-  const dispatch  = useAppDispatch();
+  const dispatch = useAppDispatch();
 
-  /** селекторы под ключ `lessonReducer` */
-  const status: LessonState['status'] = useAppSelector(
-    (st) => st.lessonReducer.status
-  );
-  const serverErr: LessonState['error'] = useAppSelector(
-    (st) => st.lessonReducer.error
-  );
+  const status    = useAppSelector(selectLessonStatus);
+  const serverErr = useAppSelector(selectLessonError);
+  const existing  = useAppSelector(selectCurrentLesson);
 
-  const [testData, setTestData] = useState<TestData>({
+  const [data, setData] = useState<TestData>({
     title: '',
     description: '',
     isPublic: false,
@@ -260,39 +248,58 @@ const TestConstructor: React.FC = () => {
     questions: [],
     lessonContent: '',
   });
+  const [currentIdx, setCurrentIdx] = useState(-1);
+  const [preview, setPreview]       = useState(false);
+  const [errors, setErrors]         = useState<string[]>([]);
+  const [isSaving, setIsSaving]     = useState(false);
 
-  const [currIdx, setCurrIdx]     = useState(-1);
-  const [previewMode, setPreview] = useState(false);
-  const [errors, setErrors]       = useState<string[]>([]);
+  /* ---- загрузка при edit-mode ----------------------- */
+  useEffect(() => { if (id) dispatch(fetchLesson(id)); }, [id, dispatch]);
 
-  /* --- переход на Dashboard при успешном сохранении ------ */
+  /* ---- заполняем форму ------------------------------ */
   useEffect(() => {
-    if (status === 'succeeded') {
-      navigate('/dashboard');
-      dispatch(resetLessonState());
+    if (existing && id) {
+      setData({
+        title:         existing.title,
+        description:   existing.description ?? '',
+        isPublic:      existing.isPublic,
+        requireEmail:  existing.requireEmail,
+        isQuiz:        existing.isQuiz,
+        duration:      existing.duration,
+        questions:     existing.questions,
+        lessonContent: existing.lessonContent ?? '',
+      });
     }
-  }, [status, navigate, dispatch]);
+  }, [existing, id]);
 
-  /* --- cleanup (сброс среза) ----------------------------- */
-  useEffect(() => {
-    return () => {               // ← возвращаем void-функцию
-      dispatch(resetLessonState());
-    };
-  }, [dispatch]);
-
-  /* --- validation --------------------------------------- */
+  /* ---- validate ------------------------------------ */
   const validate = useCallback(() => {
     const errs: string[] = [];
-    if (!testData.title.trim()) errs.push('Название теста обязательно');
-    if (testData.isQuiz && !testData.questions.length)
-      errs.push('Добавьте хотя бы один вопрос');
-    if (testData.duration < 1)
-      errs.push('Длительность должна быть ≥ 1 минуты');
+    if (!data.title.trim()) errs.push('Название теста обязательно');
+    if (data.isQuiz && !data.questions.length) errs.push('Добавьте хотя бы один вопрос');
+    if (data.duration < 1) errs.push('Длительность ≥ 1 минуты');
     setErrors(errs);
     return !errs.length;
-  }, [testData]);
+  }, [data]);
 
-  /* --- helpers ------------------------------------------ */
+  /* ---- submit -------------------------------------- */
+  const onSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (status === 'loading' || !validate()) return;
+    setIsSaving(true);    
+    id ? dispatch(updateLesson({ id, body: data })) : dispatch(createLesson(data));
+  };
+
+  /* ---- redirect on success ------------------------- */
+  useEffect(() => {
+  if (isSaving && status === 'succeeded') {
+      navigate('/dashboard');
+      dispatch(resetLessonState())
+      setIsSaving(false);;
+    }
+  }, [status, navigate, dispatch, isSaving]);
+
+  /* ---- helpers ------------------------------------- */
   const addQuestion = (type: QuestionType) => {
     const q: Question = {
       id: Date.now(),
@@ -300,106 +307,77 @@ const TestConstructor: React.FC = () => {
       text: '',
       options: type === 'text' ? [] : [{ id: Date.now(), text: '', correct: false }],
     };
-    setTestData((p) => ({ ...p, questions: [...p.questions, q] }));
-    setCurrIdx(testData.questions.length);
+    setData((d) => {
+      const questions = [...d.questions, q];
+      setCurrentIdx(questions.length - 1);
+      return { ...d, questions };
+    });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (status === 'loading' || !validate()) return;
-    dispatch(createLesson(testData));
-  };
-
-  /* --- render ------------------------------------------- */
+  /* ---------- RENDER -------------------------------- */
   return (
     <div className={styles.container}>
-      <form className={styles.form} onSubmit={handleSubmit}>
+      <form className={styles.form} onSubmit={onSubmit}>
         {/* SETTINGS */}
         <section className={styles.settingsSection}>
-          <h3 className={styles.sectionTitle}>Основные настройки</h3>
+          <h3 className={styles.sectionTitle}>
+            {id ? 'Редактирование теста' : 'Создание теста'}
+          </h3>
 
-          <InputBlock
-            label="Название *"
-            value={testData.title}
-            onChange={(v) => setTestData({ ...testData, title: v })}
-            placeholder="Название теста"
-          />
+          <InputBlock label="Название *" value={data.title}
+            onChange={(v) => setData({ ...data, title: v })}
+            placeholder="Название теста" />
 
-          <InputBlock
-            label="Описание"
-            value={testData.description ?? ''}
-            onChange={(v) => setTestData({ ...testData, description: v })}
-            placeholder="Краткое описание"
-          />
+          <InputBlock label="Описание" value={data.description ?? ''}
+            onChange={(v) => setData({ ...data, description: v })}
+            placeholder="Краткое описание" />
 
-          <SwitchRow
-            label="Тип контента"
-            checked={testData.isQuiz}
-            onChange={(v) => setTestData({ ...testData, isQuiz: v })}
-            checkedLabel="Тест"
-            uncheckedLabel="Урок"
-          />
+          <SwitchRow label="Тип контента" checked={data.isQuiz}
+            onChange={(v) => setData({ ...data, isQuiz: v })}
+            checkedLabel="Тест" uncheckedLabel="Урок" />
 
-          <InputBlock
-            label="Длительность (мин.)"
-            type="number"
-            min={1}
-            value={testData.duration.toString()}
-            onChange={(v) =>
-              setTestData({ ...testData, duration: Math.max(1, +v) })
-            }
-          />
+          <InputBlock label="Длительность (мин.)" type="number" min={1}
+            value={String(data.duration)}
+            onChange={(v) => setData({ ...data, duration: Math.max(1, +v) })} />
 
-          <SwitchRow
-            label="Сделать публичным"
-            checked={testData.isPublic}
-            onChange={(v) => setTestData({ ...testData, isPublic: v })}
-            checkedLabel="Да"
-            uncheckedLabel="Нет"
-          />
+          <SwitchRow label="Сделать публичным" checked={data.isPublic}
+            onChange={(v) => setData({ ...data, isPublic: v })}
+            checkedLabel="Да" uncheckedLabel="Нет" />
 
-          <SwitchRow
-            label="Требовать e-mail участника"
-            checked={testData.requireEmail}
-            onChange={(v) => setTestData({ ...testData, requireEmail: v })}
-            checkedLabel="Да"
-            uncheckedLabel="Нет"
-          />
+          <SwitchRow label="Требовать e-mail участника" checked={data.requireEmail}
+            onChange={(v) => setData({ ...data, requireEmail: v })}
+            checkedLabel="Да" uncheckedLabel="Нет" />
 
-          {!testData.isQuiz && (
-            <InputBlock
-              label="Содержание урока"
-              value={testData.lessonContent ?? ''}
-              onChange={(v) => setTestData({ ...testData, lessonContent: v })}
-              placeholder="Markdown / текст урока"
-            />
+          {!data.isQuiz && (
+            <InputBlock label="Содержание урока" value={data.lessonContent ?? ''}
+              onChange={(v) => setData({ ...data, lessonContent: v })}
+              placeholder="Markdown / текст урока" />
           )}
         </section>
 
         {/* QUESTIONS */}
         <section className={styles.questionsSection}>
+          {/* sidebar */}
           <div className={styles.questionsSidebar}>
             <div className={styles.questionsList}>
-              {testData.questions.map((q, i) => (
+              {data.questions.map((q, i) => (
                 <div
-                  key={q.id}
-                  className={`${styles.questionItem} ${
-                    i === currIdx ? styles.active : ''
-                  }`}
-                  onClick={() => setCurrIdx(i)}
+                  key={`sidebar-${q.id}-${i}`}              
+                  className={clsx(styles.questionItem, i === currentIdx && styles.active)}
+                  onClick={() => setCurrentIdx(i)}
                 >
                   <span>Вопрос {i + 1}</span>
                   <button
                     type="button"
-                    className={`${styles.btn} ${styles.btnDanger} ${styles.btnIcon}`}
+                    className={clsx(styles.btn, styles.btnDanger, styles.btnIcon)}
                     onClick={(e) => {
                       e.stopPropagation();
                       if (window.confirm('Удалить вопрос?')) {
-                        setTestData((p) => ({
-                          ...p,
-                          questions: p.questions.filter((_, idx) => idx !== i),
+                        setData((d) => ({
+                          ...d,
+                          questions: d.questions.filter((_, idx) => idx !== i),
                         }));
-                        setCurrIdx(-1);
+                        setCurrentIdx(-1);
                       }
                     }}
                   >
@@ -410,64 +388,49 @@ const TestConstructor: React.FC = () => {
             </div>
 
             <div className={styles.addButtons}>
-              <button
-                type="button"
-                className={`${styles.btn} ${styles.btnPrimary}`}
-                onClick={() => addQuestion('single')}
-              >
-                <PlusCircle size={20} className={styles.btnIcon} />
-                Одиночный выбор
-              </button>
-              <button
-                type="button"
-                className={`${styles.btn} ${styles.btnPrimary}`}
-                onClick={() => addQuestion('multiple')}
-              >
-                <PlusCircle size={20} className={styles.btnIcon} />
-                Множественный выбор
-              </button>
-              <button
-                type="button"
-                className={`${styles.btn} ${styles.btnPrimary}`}
-                onClick={() => addQuestion('text')}
-              >
-                <PlusCircle size={20} className={styles.btnIcon} />
-                Текстовый ответ
-              </button>
+              {(['single', 'multiple', 'text'] as QuestionType[]).map((t) => (
+                <button
+                  key={`btn-${t}`}
+                  type="button"
+                  className={clsx(styles.btn, styles.btnPrimary)}
+                  onClick={() => addQuestion(t)}
+                >
+                  <PlusCircle size={20} className={styles.btnIcon} />
+                  {{ single: 'Одиночный выбор', multiple: 'Множественный выбор', text: 'Текстовый ответ' }[t]}
+                </button>
+              ))}
             </div>
           </div>
 
-          {currIdx !== -1 && (
+          {/* editor */}
+          {currentIdx !== -1 && (
             <div className={styles.editorArea}>
               <QuestionEditor
-                question={testData.questions[currIdx]}
-                index={currIdx}
+                question={data.questions[currentIdx]}
+                index={currentIdx}
                 onUpdate={(idx, field, val) =>
-                  setTestData((p) => ({
-                    ...p,
-                    questions: p.questions.map((q, i) =>
-                      i === idx ? { ...q, [field]: val } : q,
+                  setData((d) => ({
+                    ...d,
+                    questions: d.questions.map((q, i) =>
+                      i === idx ? { ...q, [field]: val } : q
                     ),
                   }))
                 }
                 onDeleteOption={(optIdx) =>
-                  setTestData((p) => ({
-                    ...p,
-                    questions: p.questions.map((q, i) =>
-                      i === currIdx
-                        ? {
-                            ...q,
-                            options: q.options?.filter((_, oi) => oi !== optIdx),
-                          }
-                        : q,
+                  setData((d) => ({
+                    ...d,
+                    questions: d.questions.map((q, qi) =>
+                      qi === currentIdx
+                        ? { ...q, options: q.options?.filter((_, oi) => oi !== optIdx) }
+                        : q
                     ),
                   }))
                 }
                 onAddOption={() =>
-                  setTestData((p) => ({
-                    ...p,
-                    questions: p.questions.map((q, i) =>
-                      i === currIdx
+                  setData((d) => ({
+                    ...d,
+                    questions: d.questions.map((q, qi) =>
+                      qi === currentIdx
                         ? {
                             ...q,
                             options: [
@@ -475,7 +438,7 @@ const TestConstructor: React.FC = () => {
                               { id: Date.now(), text: '', correct: false },
                             ],
                           }
-                        : q,
+                        : q
                     ),
                   }))
                 }
@@ -487,10 +450,10 @@ const TestConstructor: React.FC = () => {
         {/* ERRORS */}
         {(errors.length > 0 || serverErr) && (
           <div className={styles.errorAlert}>
-            {errors.map((e) => (
-              <div key={e}>{e}</div>
+            {errors.map((e, i) => (
+              <div key={`err-${i}`}>{e}</div>
             ))}
-            {serverErr && <div>{serverErr}</div>}
+            {serverErr && <div key="server">{serverErr}</div>}
           </div>
         )}
 
@@ -498,25 +461,25 @@ const TestConstructor: React.FC = () => {
         <section className={styles.actions}>
           <button
             type="submit"
-            className={`${styles.btn} ${styles.btnPrimary} ${styles.btnLarge}`}
+            className={clsx(styles.btn, styles.btnPrimary, styles.btnLarge)}
             disabled={status === 'loading' || errors.length > 0}
           >
-            {status === 'loading' ? 'Сохраняем…' : 'Сохранить'}
+            {status === 'loading' ? 'Сохраняем…' : id ? 'Сохранить изменения' : 'Создать'}
           </button>
           <button
             type="button"
-            className={`${styles.btn} ${styles.btnSecondary}`}
+            className={clsx(styles.btn, styles.btnSecondary)}
             onClick={() => setPreview((p) => !p)}
           >
             <Eye size={28} className={styles.btnIcon} />
-            {previewMode ? 'Скрыть превью' : 'Показать превью'}
+            {preview ? 'Скрыть превью' : 'Показать превью'}
           </button>
         </section>
 
         {/* PREVIEW */}
-        {previewMode && (
-          <section className={`${styles.previewSection} ${styles.open}`}>
-            <TestPreview data={testData} />
+        {preview && (
+          <section className={clsx(styles.previewSection, styles.open)}>
+            <TestPreview data={data} />
           </section>
         )}
       </form>
