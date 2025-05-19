@@ -1,9 +1,10 @@
 import { configureStore } from "@reduxjs/toolkit";
 import auth from "./authSlice";
 import dashboard from "./dashboardSlice"
+import lessonReducer from "./lessonSlice"
 import { useDispatch, useSelector, type TypedUseSelectorHook } from "react-redux";
 
-export const store = configureStore({ reducer: { auth,    dashboard,   // ← добавили
+export const store = configureStore({ reducer: { auth,    dashboard, lessonReducer  // ← добавили
 } });
 
 export type RootState = ReturnType<typeof store.getState>;
