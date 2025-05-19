@@ -1,36 +1,82 @@
-import { Body, Controller, Post, Patch, Param, UseGuards, Req } from '@nestjs/common';
+// src/lessons/lessons.controller.ts
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
+import { Request } from 'express';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiBody,
+  ApiResponse,
+} from '@nestjs/swagger';
+
 import { LessonsService } from './lessons.service';
-import { JwtGuard } from '../auth/jwt.guard';
 import { CreateLessonDto } from './dto/create-lesson.dto';
-import { PublishLessonDto } from './dto/publish-lesson.dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
+import { JwtGuard } from 'src/auth/jwt.guard';
 
-interface RequestWithUser extends Request {
-  user: { id: string; email: string; role: string };
-}
-
-@ApiTags('Tests Management')
-@ApiBearerAuth()
-@Controller('tests')
+@ApiTags('lessons')
+@Controller('lessons')
 export class LessonsController {
-  constructor(private lessonsService: LessonsService) {}
+  constructor(private lessons: LessonsService) {}
 
+  /** создание теста / урока */
+  @UseGuards(JwtGuard)
+  @ApiBearerAuth()
   @Post()
-  @UseGuards(JwtGuard)
-  @ApiOperation({ summary: 'Создание нового теста' })
-  @ApiBody({ type: CreateLessonDto })
-  @ApiResponse({ status: 201, description: 'Тест успешно создан' })
-  async create(@Body() dto: CreateLessonDto, @Req() req: RequestWithUser) {
-    return this.lessonsService.create(dto, req.user.id);
-  }
-
-  @Patch(':id/publish')
-  @UseGuards(JwtGuard)
-  @ApiOperation({ summary: 'Публикация теста' })
-  @ApiParam({ name: 'id', description: 'UUID теста' })
-  @ApiBody({ type: PublishLessonDto })
-  @ApiResponse({ status: 200, description: 'Публичная ссылка создана/обновлена' })
-  async publish(@Param('id') id: string, @Body() dto: PublishLessonDto, @Req() req: RequestWithUser) {
-    return this.lessonsService.publish(id, dto, req.user.id);
+  @ApiOperation({
+    summary: 'Создать тест или урок',
+    description: 'Позволяет авторизованному преподавателю создать новый тест/урок с вопросами и опциями.',
+  })
+  @ApiBody({
+    description: 'Данные для создания теста/урока',
+    type: CreateLessonDto,
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Тест/урок успешно создан',
+    schema: {
+      example: {
+        id: 'uuid-урока',
+        title: 'Заголовок',
+        description: 'Описание (опционально)',
+        duration: 45,
+        requireEmail: true,
+        isPublic: false,
+        pdfUrl: null,
+        ownerId: 'uuid-автора',
+        questions: [
+          {
+            id: 1616161616161,
+            type: 'single',
+            text: 'Вопрос?',
+            options: [
+              { id: 1616161616162, text: 'Ответ 1', correct: true },
+              { id: 1616161616163, text: 'Ответ 2', correct: false },
+            ],
+            correctAnswer: null,
+            explanation: 'Пояснение',
+          },
+          // ...
+        ],
+        publicLink: {
+          uuid: 'public-uuid',
+          expiresAt: '2025-06-01T00:00:00.000Z'
+        }
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden — недостаточно прав' })
+  async create(
+    @Body() dto: CreateLessonDto,
+    @Req() req: Request,
+  ) {
+    const userId = req.user!['sub']; // id залогиненного автора
+    return this.lessons.create(userId, dto);
   }
 }

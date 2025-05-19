@@ -54,19 +54,27 @@ model EmailVerification {               // ← НОВОЕ
 }
 
 model Lesson {
-  id          String   @id @default(uuid())
-  title       String
-  description String?
-  pdfUrl      String?  // Делаем поле опциональным
-  isPublic    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  
-  ownerId String?
-  owner   User?   @relation(fields: [ownerId], references: [id], onDelete: SetNull)
-  
+  id            String   @id @default(uuid())
+  title         String
+  description   String?
+  /** ▼ новые поля */
+  duration      Int      @default(30)      // минут
+  requireEmail  Boolean  @default(false)   // запрашивать e-mail участника
+  isQuiz        Boolean  @default(true)
+  questions     Json                         // ← ВСЕ вопросы / ответы здесь
+  /** ▲ */
+  pdfUrl        String?
+  isPublic      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  ownerId  String?
+  owner    User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
   publicLink PublicLink?
-  attempts   Attempt[]   
+  attempts   Attempt[]
 }
+
+
 
 model Attempt {
   id          String   @id @default(uuid())
